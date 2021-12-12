@@ -19,6 +19,16 @@ Run the program
 
 Files can be parsed either during program operation or on startup by providing them as an argument:
     .\binarytree.exe "values.txt"
+
+-- REQUIREMENTS
+[X] Can read and add values from a file
+[X] Can add values during runtime
+[X] Can print the search tree
+[X] Can search values
+
+[X] Should print the building stages of the tree.
+[X] Print should have a "tree like" format.
+
 */
 
 #include <math.h>
@@ -26,7 +36,7 @@ Files can be parsed either during program operation or on startup by providing t
 #include <stdio.h>
 #include <string.h>
 
-#define BUFFER_SIZE 8
+#define BUFFER_SIZE 16
 #define FILENAME_LENGTH 32
 
 typedef struct node_struct
@@ -52,7 +62,7 @@ int find_value(t_pointer, int);
 int main(int argc, char const *argv[])
 {
     int bi, i, select, num = 0; // bi = balance indicator
-    t_pointer tree = NULL;
+    t_pointer tree = NULL;      // Root pointer
     char filename[FILENAME_LENGTH] = "";
 
     // Get arguments if provided and build the tree
@@ -69,7 +79,7 @@ int main(int argc, char const *argv[])
     }
 
     // Main loop
-    int values[count_lines(filename)];
+    int values[count_lines(filename)]; // Set scope outside of loop
     while (1)
     {
         select = menu_handler();
@@ -142,7 +152,7 @@ int menu_handler()
     OUTPUT int - integer parsed from the user's input */
 int input_to_int()
 {
-    char input[8];
+    char input[BUFFER_SIZE];
     fgets(input, 8, stdin);
     input[strlen(input) - 1] = '\0';
 
@@ -166,17 +176,16 @@ int input_to_int()
 
 /* Counts the amount of lines in an input file
     INPUT: const char * - Filename as a string
-    OUTPUT int - integer parsed from the user's input */
+    OUTPUT int - How many lines the file has */
 int count_lines(const char filename[])
 {
     FILE *fp;
     int lines = 0;
 
-    fp = fopen("values.txt", "r");
+    fp = fopen(filename, "r");
     if (fp == NULL)
     {
-        perror("FILE: Failed to open file. Exiting with code 1.");
-        exit(1);
+        return 0;
     }
 
     char c;
@@ -188,7 +197,7 @@ int count_lines(const char filename[])
             lines++;
         }
     }
-
+    printf("-----%d\n", lines);
     fclose(fp);
 
     return lines;
@@ -201,6 +210,11 @@ int count_lines(const char filename[])
     OUTPUT int - How many lines the files has */
 void read_file(const char filename[], int values[])
 {
+    if (filename == "")
+    {
+        return;
+    }
+
     FILE *fp;
     char line[BUFFER_SIZE];
     int i = 0;
@@ -408,7 +422,7 @@ void rotate_right(t_pointer *parent, int *bi)
     *bi = 0;
 }
 
-////////////////    NODE CONTROL    ////////////////
+////////////////    NODE SEARCH    ////////////////
 
 /* Adds a node into the tree an takes care of balancing.
     INPUT:
