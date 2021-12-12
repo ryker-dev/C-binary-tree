@@ -9,7 +9,7 @@ This program uses a modified version of the code given in exercise 7 as a framew
 This file also contains of bits of code previously used in my other programs.
 Code is in English for clarity and comaptibility.
 
-USAGE
+-- USAGE
 Compile the program using the c99 standard:
     gcc .\binarytree.c -o .\binarytree.exe -std=c99
 
@@ -55,6 +55,7 @@ int main(int argc, char const *argv[])
     t_pointer tree = NULL;
     char filename[FILENAME_LENGTH] = "";
 
+    // Get arguments if provided and build the tree
     if (argc > 1)
     {
         int values[count_lines(argv[1])];
@@ -67,16 +68,17 @@ int main(int argc, char const *argv[])
         }
     }
 
+    // Main loop
     int values[count_lines(filename)];
     while (1)
     {
         select = menu_handler();
 
+        // Menu options
         values[count_lines(filename)];
         switch (select)
         {
         case 0:
-            /* free memory */
             exit(0);
         case 1:
             printf("\nFilename:");
@@ -190,6 +192,8 @@ int count_lines(const char filename[])
         }
     }
 
+    fclose(fp);
+
     return lines;
 }
 
@@ -215,6 +219,8 @@ void read_file(const char filename[], int values[])
     {
         values[i++] = atoi(line);
     }
+
+    fclose(fp);
 
     return;
 }
