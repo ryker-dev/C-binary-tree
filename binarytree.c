@@ -49,6 +49,8 @@ int menu_handler();
 int input_to_int();
 int find_value(t_pointer, int);
 
+///////////////////////
+
 int main(int argc, char const *argv[])
 {
     int bi, i, select, num = 0; // bi = balance indicator
