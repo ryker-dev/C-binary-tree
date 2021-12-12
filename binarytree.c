@@ -197,7 +197,6 @@ int count_lines(const char filename[])
             lines++;
         }
     }
-    printf("-----%d\n", lines);
     fclose(fp);
 
     return lines;
