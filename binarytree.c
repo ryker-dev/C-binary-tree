@@ -1,192 +1,222 @@
+/*
+Balanced Binary Tree in C
+BM40A0301 Tietorakenteet ja algoritmit
+
+Author: Emilio Pizzuti
+
+This program uses a modified version of the code given in exercise 7 as a framework.
+
+
+
+*/
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct puusolmu_t {
-  int luku;
-  short tila; /* tasapainoilmaisin */
-  struct puusolmu_t *vasen, *oikea;
-} puusolmu, *puuosoitin;
+typedef struct node_struct
+{
+    int value;
+    short balance; // Balance indicator. 1 = rotate left, 0 = balanced, -1 = rotate right
+    struct node_struct *left, *right;
+} node, *t_pointer;
 
-void lisaa_solmu(puuosoitin *, int, int *);
-void oikea_kierto(puuosoitin *, int *);
-void tulosta_puu(puuosoitin, int);
-void vasen_kierto(puuosoitin *, int *);
+void add_node(t_pointer *, int, int *);
+void rotate_right(t_pointer *, int *);
+void print_tree(t_pointer, int);
+void rotate_left(t_pointer *, int *);
 
 int main()
 {
-  int etp = 0, i, luvut[] = {2, 4, 6, 8, 10, 12, 14, 30, 28};
-  puuosoitin puu = NULL;
-  
-  for(i = 0; luvut[i] != 0; i++)
-  {
-    lisaa_solmu(&puu, luvut[i], &etp);
-/*     tulosta_puu(puu, 0);
-    printf("\n"); */
-  }
-  tulosta_puu(puu, 0);
-  printf("\n");
+    int bi = 0, i, values[] = {2, 4, 6, 8, 10, 12, 14, 30, 28}; // bi = balance indicator
+    t_pointer tree = NULL;
 
-  return 0;
+    for (i = 0; values[i] != 0; i++)
+    {
+        add_node(&tree, values[i], &bi);
+        /*     print_tree(tree, 0);
+            printf("\n"); */
+    }
+    print_tree(tree, 0);
+    printf("\n");
+
+    return 0;
 }
 
-void lisaa_solmu(puuosoitin *emo, int luku, int *etp)
+void add_node(t_pointer *parent, int value, int *bi)
 {
-  if(!(*emo))
-  {
-    *etp = 1;
-    if(!(*emo = (puuosoitin)malloc(sizeof(puusolmu))))
+    if (!(*parent))
     {
-      perror("malloc");
-      exit(1);
+        *bi = 1;
+        if (!(*parent = (t_pointer)malloc(sizeof(node))))
+        {
+            perror("MALLOC: Failed to reserve memory for a node. Exiting with code 1.");
+            exit(1);
+        }
+        (*parent)->left = (*parent)->right = NULL;
+        (*parent)->balance = 0;
+        (*parent)->value = value;
     }
-    (*emo)->vasen = (*emo)->oikea = NULL;
-    (*emo)->tila = 0;
-    (*emo)->luku = luku;
-  } else if(luku < (*emo)->luku)
-  {
-    lisaa_solmu(&(*emo)->vasen, luku, etp);
-    if(*etp)
+    else if (value < (*parent)->value)
     {
-      switch((*emo)->tila)
-      {
-        case -1:
-          (*emo)->tila = 0;
-          *etp = 0;
-          break;
-        case 0:
-          (*emo)->tila = 1;
-          break;
-        case 1:
-          vasen_kierto(emo, etp);
-      }
+        add_node(&(*parent)->left, value, bi);
+        if (*bi)
+        {
+            switch ((*parent)->balance)
+            {
+            case -1:
+                (*parent)->balance = 0;
+                *bi = 0;
+                break;
+            case 0:
+                (*parent)->balance = 1;
+                break;
+            case 1:
+                rotate_left(parent, bi);
+            }
+        }
     }
-  } else if(luku > (*emo)->luku)
-  {
-    lisaa_solmu(&(*emo)->oikea, luku, etp);
-    if(*etp)
+    else if (value > (*parent)->value)
     {
-      switch((*emo)->tila)
-      {
-        case 1:
-          (*emo)->tila = 0;
-          *etp = 0;
-          break;
-        case 0:
-          (*emo)->tila = -1;
-           break;
-        case -1:
-          oikea_kierto(emo, etp);
-      }
+        add_node(&(*parent)->right, value, bi);
+        if (*bi)
+        {
+            switch ((*parent)->balance)
+            {
+            case 1:
+                (*parent)->balance = 0;
+                *bi = 0;
+                break;
+            case 0:
+                (*parent)->balance = -1;
+                break;
+            case -1:
+                rotate_right(parent, bi);
+            }
+        }
     }
-  } else
-  {
-    *etp = 0;
-    printf("Luku %d on jo puussa\n", luku);
-  }
+    else
+    {
+        *bi = 0;
+        printf("Value %d already exists.\n", value);
+    }
 }
 
-int laske_syvyys(puuosoitin solmu, int arvo) {
+/* int calc_depth(t_pointer node, int value)
+{
     int i = 0;
-    while (solmu->luku != arvo) {
-        if (arvo < solmu->luku) {
-            solmu = solmu->vasen;
-        } else if (arvo > solmu->luku) {
-            solmu = solmu->oikea;
-        } else if (arvo == solmu->luku) {
+    while (node->value != value)
+    {
+        if (value < node->value)
+        {
+            node = node->left;
+        }
+        else if (value > node->value)
+        {
+            node = node->right;
+        }
+        else if (value == node->value)
+        {
             return i;
-            printf("Syvyys %d", i);
+            printf("Depth %d", i);
         }
         i++;
     }
 
     return -1;
-}
+} */
 
-void tulosta_puu(puuosoitin solmu, int height)
+void print_tree(t_pointer node, int height)
 {
-  if(!solmu) {
+    if (!node)
+    {
         return;
     }
     height++;
-  tulosta_puu(solmu->oikea, height);
-    for(int i = 0; i < height; i++) {
+
+    print_tree(node->right, height);
+
+    for (int i = 0; i < height; i++)
+    {
         printf("    ");
     }
-  printf("%d\n", solmu->luku);
-  tulosta_puu(solmu->vasen, height);
+
+    printf("%d\n", node->value);
+    print_tree(node->left, height);
 }
 
-void vasen_kierto(puuosoitin *emo, int *etp)
+void rotate_left(t_pointer *parent, int *bi)
 {
-  puuosoitin lapsi, lapsenlapsi;
+    t_pointer child, grandchild;
 
-  lapsi = (*emo)->vasen;
-  if(lapsi->tila == 1) /* LL-kierto */
-  {
-    (*emo)->vasen = lapsi->oikea;
-    lapsi->oikea = *emo;
-    (*emo)->tila = 0;
-    (*emo) = lapsi;
-  } else /* LR-kierto */
-  {
-    lapsenlapsi = lapsi->oikea;
-    lapsi->oikea = lapsenlapsi->vasen;
-    lapsenlapsi->vasen = lapsi;
-    (*emo)->vasen = lapsenlapsi->oikea;
-    lapsenlapsi->oikea = *emo;
-    switch(lapsenlapsi->tila)
+    child = (*parent)->left;
+    if (child->balance == 1) /* LL */
     {
-      case 1:
-        (*emo)->tila = -1;
-        lapsi->tila = 0;
-        break;
-      case 0:
-        (*emo)->tila = lapsi->tila = 0;
-        break;
-      case -1:
-        (*emo)->tila = 0;
-        lapsi->tila = 1;
+        (*parent)->left = child->right;
+        child->right = *parent;
+        (*parent)->balance = 0;
+        (*parent) = child;
     }
-    *emo = lapsenlapsi;
-  }
-  (*emo)->tila = 0;
-  *etp = 0;
+    else /* LR */
+    {
+        grandchild = child->right;
+        child->right = grandchild->left;
+        grandchild->left = child;
+        (*parent)->left = grandchild->right;
+        grandchild->right = *parent;
+        switch (grandchild->balance)
+        {
+        case 1:
+            (*parent)->balance = -1;
+            child->balance = 0;
+            break;
+        case 0:
+            (*parent)->balance = child->balance = 0;
+            break;
+        case -1:
+            (*parent)->balance = 0;
+            child->balance = 1;
+        }
+        *parent = grandchild;
+    }
+    (*parent)->balance = 0;
+    *bi = 0;
 }
 
-void oikea_kierto(puuosoitin *emo, int *etp)
+void rotate_right(t_pointer *parent, int *bi)
 {
-    puuosoitin lapsi, lapsenlapsi;
+    t_pointer child, grandchild;
 
-  lapsi = (*emo)->oikea;
-  if(lapsi->tila == -1) /* RR-kierto */
-  {
-    (*emo)->oikea = lapsi->vasen;
-    lapsi->vasen = *emo;
-    (*emo)->tila = 0;
-    (*emo) = lapsi;
-  } else /* RL-kierto */
-  {
-    lapsenlapsi = lapsi->vasen;
-    lapsi->vasen = lapsenlapsi->oikea;
-    lapsenlapsi->oikea = lapsi;
-    (*emo)->oikea = lapsenlapsi->vasen;
-    lapsenlapsi->vasen = *emo;
-    switch(lapsenlapsi->tila)
+    child = (*parent)->right;
+    if (child->balance == -1) /* RR */
     {
-      case 1:
-        (*emo)->tila = -1;
-        lapsi->tila = 0;
-        break;
-      case 0:
-        (*emo)->tila = lapsi->tila = 0;
-        break;
-      case -1:
-        (*emo)->tila = 0;
-        lapsi->tila = 1;
+        (*parent)->right = child->left;
+        child->left = *parent;
+        (*parent)->balance = 0;
+        (*parent) = child;
     }
-    *emo = lapsenlapsi;
-  }
-  (*emo)->tila = 0;
-  *etp = 0;
+    else /* RL */
+    {
+        grandchild = child->left;
+        child->left = grandchild->right;
+        grandchild->right = child;
+        (*parent)->right = grandchild->left;
+        grandchild->left = *parent;
+        switch (grandchild->balance)
+        {
+        case 1:
+            (*parent)->balance = -1;
+            child->balance = 0;
+            break;
+        case 0:
+            (*parent)->balance = child->balance = 0;
+            break;
+        case -1:
+            (*parent)->balance = 0;
+            child->balance = 1;
+        }
+        *parent = grandchild;
+    }
+    (*parent)->balance = 0;
+    *bi = 0;
 }
