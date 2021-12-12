@@ -2,88 +2,191 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct node {
-    int value;
-    short height;
-    struct node *left, *right;
-} node, *tree_pointer;
+typedef struct puusolmu_t {
+  int luku;
+  short tila; /* tasapainoilmaisin */
+  struct puusolmu_t *vasen, *oikea;
+} puusolmu, *puuosoitin;
 
-int get_height(node *node)
+void lisaa_solmu(puuosoitin *, int, int *);
+void oikea_kierto(puuosoitin *, int *);
+void tulosta_puu(puuosoitin, int);
+void vasen_kierto(puuosoitin *, int *);
+
+int main()
 {
-    if (node == NULL)
-        return 0;
-    return node->height;
+  int etp = 0, i, luvut[] = {2, 4, 6, 8, 10, 12, 14, 30, 28};
+  puuosoitin puu = NULL;
+  
+  for(i = 0; luvut[i] != 0; i++)
+  {
+    lisaa_solmu(&puu, luvut[i], &etp);
+/*     tulosta_puu(puu, 0);
+    printf("\n"); */
+  }
+  tulosta_puu(puu, 0);
+  printf("\n");
+
+  return 0;
 }
 
-
-int calc_balance(node *node)
+void lisaa_solmu(puuosoitin *emo, int luku, int *etp)
 {
-    if (node == NULL)
-        return 0;
-    return get_height(node->left) - get_height(node->right);
-}
-
-int max(int a, int b)
-{
-    return (a > b)? a : b;
-}
-
-/* struct node* create_node(int value)
-{
-    if(!(node* new_node = (tree_pointer)malloc(sizeof(node)))) {
-        perror("Malloc: Failed to reserve memory for a node!");
-        exit(1);
+  if(!(*emo))
+  {
+    *etp = 1;
+    if(!(*emo = (puuosoitin)malloc(sizeof(puusolmu))))
+    {
+      perror("malloc");
+      exit(1);
     }
-    new_node->left = new_node->right = NULL;
-    new_node->height = 1;
-    new_node->value = value;
-    return(new_node);
-} */
+    (*emo)->vasen = (*emo)->oikea = NULL;
+    (*emo)->tila = 0;
+    (*emo)->luku = luku;
+  } else if(luku < (*emo)->luku)
+  {
+    lisaa_solmu(&(*emo)->vasen, luku, etp);
+    if(*etp)
+    {
+      switch((*emo)->tila)
+      {
+        case -1:
+          (*emo)->tila = 0;
+          *etp = 0;
+          break;
+        case 0:
+          (*emo)->tila = 1;
+          break;
+        case 1:
+          vasen_kierto(emo, etp);
+      }
+    }
+  } else if(luku > (*emo)->luku)
+  {
+    lisaa_solmu(&(*emo)->oikea, luku, etp);
+    if(*etp)
+    {
+      switch((*emo)->tila)
+      {
+        case 1:
+          (*emo)->tila = 0;
+          *etp = 0;
+          break;
+        case 0:
+          (*emo)->tila = -1;
+           break;
+        case -1:
+          oikea_kierto(emo, etp);
+      }
+    }
+  } else
+  {
+    *etp = 0;
+    printf("Luku %d on jo puussa\n", luku);
+  }
+}
 
-void add_node(tree_pointer *parent, int value) {
-    // If there is no root (first element)
-    if(!(*parent)) {
-        //*etp = 1;
-        if(!(*parent = (tree_pointer)malloc(sizeof(node)))) {
-            perror("Malloc: Failed to reserve memory for a node!");
-            exit(1);
+int laske_syvyys(puuosoitin solmu, int arvo) {
+    int i = 0;
+    while (solmu->luku != arvo) {
+        if (arvo < solmu->luku) {
+            solmu = solmu->vasen;
+        } else if (arvo > solmu->luku) {
+            solmu = solmu->oikea;
+        } else if (arvo == solmu->luku) {
+            return i;
+            printf("Syvyys %d", i);
         }
-        (*parent)->left = (*parent)->right = NULL;
-        (*parent)->height = 1;
-        (*parent)->value = value;
+        i++;
     }
 
-    else if(value < (*parent)->value) {
-        add_node(&(*parent)->left, value);
-    }
-
-    else if(value > (*parent)->value) {
-        add_node(&(*parent)->right, value);
-    }
+    return -1;
 }
 
-/* void left_rotate(tree_pointer) {
-
-} */
-
-void print_tree(tree_pointer node)
+void tulosta_puu(puuosoitin solmu, int height)
 {
-    if(!node) return;
-    print_tree(node->left);
-    printf("%d ", node->value);
-    print_tree(node->right);
+  if(!solmu) {
+        return;
+    }
+    height++;
+  tulosta_puu(solmu->oikea, height);
+    for(int i = 0; i < height; i++) {
+        printf("    ");
+    }
+  printf("%d\n", solmu->luku);
+  tulosta_puu(solmu->vasen, height);
 }
 
-int main(int argc, char const *argv[])
+void vasen_kierto(puuosoitin *emo, int *etp)
 {
-    int etp, i = 0, input[] = { 2, 4, 6, 8, 10, 12, 14, 28, 30};
-    tree_pointer root = NULL;
+  puuosoitin lapsi, lapsenlapsi;
 
-    for(i = 0; input[i] != 0; i++) {
-        add_node(&root, input[i]);
+  lapsi = (*emo)->vasen;
+  if(lapsi->tila == 1) /* LL-kierto */
+  {
+    (*emo)->vasen = lapsi->oikea;
+    lapsi->oikea = *emo;
+    (*emo)->tila = 0;
+    (*emo) = lapsi;
+  } else /* LR-kierto */
+  {
+    lapsenlapsi = lapsi->oikea;
+    lapsi->oikea = lapsenlapsi->vasen;
+    lapsenlapsi->vasen = lapsi;
+    (*emo)->vasen = lapsenlapsi->oikea;
+    lapsenlapsi->oikea = *emo;
+    switch(lapsenlapsi->tila)
+    {
+      case 1:
+        (*emo)->tila = -1;
+        lapsi->tila = 0;
+        break;
+      case 0:
+        (*emo)->tila = lapsi->tila = 0;
+        break;
+      case -1:
+        (*emo)->tila = 0;
+        lapsi->tila = 1;
     }
+    *emo = lapsenlapsi;
+  }
+  (*emo)->tila = 0;
+  *etp = 0;
+}
 
-    print_tree(root);
+void oikea_kierto(puuosoitin *emo, int *etp)
+{
+    puuosoitin lapsi, lapsenlapsi;
 
-    return 0;
+  lapsi = (*emo)->oikea;
+  if(lapsi->tila == -1) /* RR-kierto */
+  {
+    (*emo)->oikea = lapsi->vasen;
+    lapsi->vasen = *emo;
+    (*emo)->tila = 0;
+    (*emo) = lapsi;
+  } else /* RL-kierto */
+  {
+    lapsenlapsi = lapsi->vasen;
+    lapsi->vasen = lapsenlapsi->oikea;
+    lapsenlapsi->oikea = lapsi;
+    (*emo)->oikea = lapsenlapsi->vasen;
+    lapsenlapsi->vasen = *emo;
+    switch(lapsenlapsi->tila)
+    {
+      case 1:
+        (*emo)->tila = -1;
+        lapsi->tila = 0;
+        break;
+      case 0:
+        (*emo)->tila = lapsi->tila = 0;
+        break;
+      case -1:
+        (*emo)->tila = 0;
+        lapsi->tila = 1;
+    }
+    *emo = lapsenlapsi;
+  }
+  (*emo)->tila = 0;
+  *etp = 0;
 }
