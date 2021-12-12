@@ -40,15 +40,17 @@ typedef struct node_struct
 void add_node(t_pointer *, int, int *);
 void rotate_right(t_pointer *, int *);
 void print_tree(t_pointer, int);
+void print_nodes(t_pointer, int);
 void rotate_left(t_pointer *, int *);
 void read_file(const char *, int *);
 int count_lines(const char *);
 int menu_handler();
 int input_to_int();
+int find_value(t_pointer, int);
 
 int main(int argc, char const *argv[])
 {
-    int bi, i, select = 0; // bi = balance indicator
+    int bi, i, select, num = 0; // bi = balance indicator
     t_pointer tree = NULL;
     char filename[FILENAME_LENGTH] = "";
 
@@ -60,6 +62,7 @@ int main(int argc, char const *argv[])
         for (i = 0; values[i] != 0; i++)
         {
             add_node(&tree, values[i], &bi);
+            print_tree(tree, 0);
         }
     }
 
@@ -86,30 +89,29 @@ int main(int argc, char const *argv[])
                 add_node(&tree, values[i], &bi);
             }
 
-            printf("\n");
             print_tree(tree, 0);
-            printf("\n");
 
             free(values);
             break;
         case 2:
             printf("Input a value: ");
-            int num = input_to_int();
+            num = input_to_int();
             add_node(&tree, num, &bi);
             break;
         case 3:
-            printf("\n");
+            printf("Value to search: ");
+            num = input_to_int();
+            find_value(tree, num);
+            break;
+        case 4:
             print_tree(tree, 0);
-            printf("\n");
             break;
         default:
             printf("Unknown selection.\n");
             break;
         }
-        printf("\n");
     }
     print_tree(tree, 0);
-    printf("\n");
 
     return 0;
 }
@@ -123,9 +125,10 @@ int menu_handler()
 {
     int selection = -1;
 
-    printf("1) Read a file\n");
+    printf("\n1) Read a file\n");
     printf("2) Input value\n");
-    printf("3) Print tree\n");
+    printf("3) Search value\n");
+    printf("4) Print tree\n");
     printf("0) Exit\n");
     printf("Action: ");
 
@@ -140,9 +143,11 @@ int menu_handler()
     OUTPUT int - integer parsed from the user's input */
 int input_to_int()
 {
-    char input[5];
-    fgets(input, 4, stdin);
+    char input[8];
+    fgets(input, 8, stdin);
     input[strlen(input) - 1] = '\0';
+
+    printf("\n");
 
     /* Count for atoi and its inability to recognise a zero */
     if (!strcmp(input, "0"))
@@ -223,13 +228,20 @@ void read_file(const char filename[], int values[])
     OUTPUT void */
 void print_tree(t_pointer node, int height)
 {
+    printf("----------------\n");
+    print_nodes(node, height);
+    printf("----------------\n");
+}
+
+void print_nodes(t_pointer node, int height)
+{
     if (!node)
     {
         return;
     }
     height++;
 
-    print_tree(node->right, height);
+    print_nodes(node->right, height);
 
     for (int i = 0; i < height; i++)
     {
@@ -237,7 +249,7 @@ void print_tree(t_pointer node, int height)
     }
 
     printf("%d\n", node->value);
-    print_tree(node->left, height);
+    print_nodes(node->left, height);
 }
 
 ////////////////    NODE CONTROL    ////////////////
@@ -391,4 +403,46 @@ void rotate_right(t_pointer *parent, int *bi)
     }
     (*parent)->balance = 0;
     *bi = 0;
+}
+
+////////////////    NODE CONTROL    ////////////////
+
+/* Adds a node into the tree an takes care of balancing.
+    INPUT:
+        0: t_pointer - The parent node the new value should be a child of.
+        1: int - The numeric value of the node.
+        2: int - The balance index of the whole tree. Passed from main().
+    OUTPUT void */
+int find_value(t_pointer node, int value)
+{
+
+    if (!node)
+    {
+        printf("Value %d was not found!", value);
+        return 0;
+    }
+
+    if (value < node->value)
+    {
+        find_value(node->left, value);
+    }
+    else if (value > node->value)
+    {
+        find_value(node->right, value);
+    }
+    else
+    {
+        if (value == node->value)
+        {
+            printf("Value %d was found in the tree!", value);
+            return 1;
+        }
+        else
+        {
+            printf("Value %d was not found!", value);
+            return 1;
+        }
+    }
+
+    return 0;
 }
