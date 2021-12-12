@@ -11,8 +11,10 @@ This program uses a modified version of the code given in exercise 7 as a framew
 */
 
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+
+#define BUFFER_SIZE 8
 
 typedef struct node_struct
 {
@@ -21,15 +23,27 @@ typedef struct node_struct
     struct node_struct *left, *right;
 } node, *t_pointer;
 
-void add_node(t_pointer *, int, int *);
+typedef struct linked_values
+{
+    int value;
+    struct linked_values *prev, *next;
+}
+
+void
+add_node(t_pointer *, int, int *);
 void rotate_right(t_pointer *, int *);
 void print_tree(t_pointer, int);
 void rotate_left(t_pointer *, int *);
+void read_file(const char *, int *);
 
-int main()
+int main(int argc, char const *argv[])
 {
-    int bi = 0, i, values[] = {2, 4, 6, 8, 10, 12, 14, 30, 28}; // bi = balance indicator
+    int bi = 0, i; // bi = balance indicator
     t_pointer tree = NULL;
+
+    printf("%d\n", argv[1]);
+
+    read_file(argv[1], values);
 
     for (i = 0; values[i] != 0; i++)
     {
@@ -43,6 +57,26 @@ int main()
     return 0;
 }
 
+void read_file(const char filename[], int *array)
+{
+    FILE *fp;
+    char line[BUFFER_SIZE];
+    int num;
+
+    printf("%d\n", filename);
+
+    fp = fopen("values.txt", "r");
+    if (fp == NULL)
+    {
+        perror("FILE: Failed to open file. Exiting with code 1.");
+        exit(1);
+    }
+
+    while (fgets(line, BUFFER_SIZE, fp) != NULL)
+    {
+        printf("%s", line);
+    }
+}
 void add_node(t_pointer *parent, int value, int *bi)
 {
     if (!(*parent))
