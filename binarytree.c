@@ -3,19 +3,26 @@ Balanced Binary Tree in C
 BM40A0301 Tietorakenteet ja algoritmit
 
 Author: Emilio Pizzuti
+Date: 12.12.2021
 
 This program uses a modified version of the code given in exercise 7 as a framework.
+This file also contains of bits of code previously used in my other programs.
+Code is in English for clarity and comaptibility.
 
-
-
+USAGE
+Files can be parsed on program startup by providing them as an argument:
+    .\binarytree.exe "values.txt"
 */
 
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #define BUFFER_SIZE 8
-#define FILENAME_SIZE 32
+#define FILENAME_LENGTH 32
+
+#define DEBUG 0
 
 typedef struct node_struct
 {
@@ -36,23 +43,70 @@ void print_tree(t_pointer, int);
 void rotate_left(t_pointer *, int *);
 void read_file(const char *, int *);
 int count_lines(const char *);
+int menu_handler();
+int input_to_int();
 
 int main(int argc, char const *argv[])
 {
-    int bi = 0, i; // bi = balance indicator
+    int bi, i, select = 0; // bi = balance indicator
     t_pointer tree = NULL;
-    /* char filename[FILENAME_SIZE] = argv[1]; */
+    char filename[FILENAME_LENGTH] = "";
 
-    printf("%d\n", argv[1]);
-
-    int values[count_lines(argv[1])];
-    read_file(argv[1], values);
-
-    for (i = 0; values[i] != 0; i++)
+    if (argc > 1)
     {
-        add_node(&tree, values[i], &bi);
-        /*     print_tree(tree, 0);
-            printf("\n"); */
+        int values[count_lines(argv[1])];
+        read_file(argv[1], values);
+
+        for (i = 0; values[i] != 0; i++)
+        {
+            add_node(&tree, values[i], &bi);
+        }
+    }
+
+    int values[count_lines(filename)];
+    while (1)
+    {
+        select = menu_handler();
+
+        values[count_lines(filename)];
+        switch (select)
+        {
+        case 0:
+            /* free memory */
+            exit(0);
+        case 1:
+            printf("\nFilename:");
+            fgets(filename, FILENAME_LENGTH, stdin);
+            filename[strlen(filename) - 1] = '\0';
+
+            read_file(argv[1], values);
+
+            for (i = 0; values[i] != 0; i++)
+            {
+                add_node(&tree, values[i], &bi);
+            }
+
+            printf("\n");
+            print_tree(tree, 0);
+            printf("\n");
+
+            free(values);
+            break;
+        case 2:
+            printf("Input a value: ");
+            int num = input_to_int();
+            add_node(&tree, num, &bi);
+            break;
+        case 3:
+            printf("\n");
+            print_tree(tree, 0);
+            printf("\n");
+            break;
+        default:
+            printf("Unknown selectio.\n");
+            break;
+        }
+        printf("\n");
     }
     print_tree(tree, 0);
     printf("\n");
@@ -60,6 +114,55 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
+////////////////    INPUT    ////////////////
+
+/* Handles the text menu. Returns a negative integer on error.
+    INPUT: - -
+    OUTPUT int - selection integer */
+int menu_handler()
+{
+    int selection = -1;
+
+    printf("1) Read a file\n");
+    printf("2) Input value\n");
+    printf("3) Print tree\n");
+    printf("0) Exit\n");
+    printf("Action: ");
+
+#if DEBUG
+    printf("DEBUG: selection was %d\n", selection);
+#endif
+    return input_to_int();
+}
+
+/* Converts the next input into an integer. Returns a negative integer on error.
+    INPUT: - -
+    OUTPUT int - integer parsed from the user's input */
+int input_to_int()
+{
+    char input[5];
+    fgets(input, 4, stdin);
+    input[strlen(input) - 1] = '\0';
+
+    /* Count for atoi and its inability to recognise a zero */
+    if (!strcmp(input, "0"))
+    {
+        return 0;
+    }
+
+    int select = atoi(input);
+
+    if (select == 0)
+    {
+        return -1;
+    }
+}
+
+////////////////    FILE READING    ////////////////
+
+/* Counts the amount of lines in an input file
+    INPUT: const char * - Filename as a string
+    OUTPUT int - integer parsed from the user's input */
 int count_lines(const char filename[])
 {
     FILE *fp;
@@ -85,16 +188,18 @@ int count_lines(const char filename[])
     return lines;
 }
 
+/* Counts the amount of lines in an input file
+    INPUT:
+        0: const char * - Filename as a string
+        1: int * - An int array to store the values to
+    OUTPUT int - How many lines the files has */
 void read_file(const char filename[], int values[])
 {
-    filename = "values.txt";
     FILE *fp;
     char line[BUFFER_SIZE];
     int i = 0;
 
-    printf("%d\n", filename);
-
-    fp = fopen("values.txt", "r");
+    fp = fopen(filename, "r");
     if (fp == NULL)
     {
         perror("FILE: Failed to open file. Exiting with code 1.");
@@ -109,26 +214,40 @@ void read_file(const char filename[], int values[])
     return;
 }
 
-/* linked_values *append(linked_values *pStart, int value)
+////////////////    PRINTING    ////////////////
+
+/* Prints the given tree.
+    INPUT:
+        0: t_pointer - The root node of the tree
+        1: int - A height value required for formatting. Height should always be 0 on first call.
+    OUTPUT void */
+void print_tree(t_pointer node, int height)
 {
-    if (pStart == NULL)
+    if (!node)
     {
-        return pStart;
+        return;
+    }
+    height++;
+
+    print_tree(node->right, height);
+
+    for (int i = 0; i < height; i++)
+    {
+        printf("    ");
     }
 
-    linked_values *ptr = pStart;
-    while (ptr->next != NULL)
-    {
-        ptr = ptr->next;
-    }
+    printf("%d\n", node->value);
+    print_tree(node->left, height);
+}
 
-    linked_values *new;
+////////////////    NODE CONTROL    ////////////////
 
-    ptr->next = new;
-
-    return;
-} */
-
+/* Adds a node into the tree an takes care of balancing.
+    INPUT:
+        0: t_pointer - The parent node the new value should be a child of.
+        1: int - The numeric value of the node.
+        2: int - The balance index of the whole tree. Passed from main().
+    OUTPUT void */
 void add_node(t_pointer *parent, int value, int *bi)
 {
     if (!(*parent))
@@ -188,49 +307,11 @@ void add_node(t_pointer *parent, int value, int *bi)
     }
 }
 
-/* int calc_depth(t_pointer node, int value)
-{
-    int i = 0;
-    while (node->value != value)
-    {
-        if (value < node->value)
-        {
-            node = node->left;
-        }
-        else if (value > node->value)
-        {
-            node = node->right;
-        }
-        else if (value == node->value)
-        {
-            return i;
-            printf("Depth %d", i);
-        }
-        i++;
-    }
-
-    return -1;
-} */
-
-void print_tree(t_pointer node, int height)
-{
-    if (!node)
-    {
-        return;
-    }
-    height++;
-
-    print_tree(node->right, height);
-
-    for (int i = 0; i < height; i++)
-    {
-        printf("    ");
-    }
-
-    printf("%d\n", node->value);
-    print_tree(node->left, height);
-}
-
+/* Conducts both LL and LR rotations.
+    INPUT:
+        0: t_pointer - The parent node the new value should be a child of.
+        1: int - The balance index of the whole tree. Passed from main().
+    OUTPUT void */
 void rotate_left(t_pointer *parent, int *bi)
 {
     t_pointer child, grandchild;
@@ -269,6 +350,11 @@ void rotate_left(t_pointer *parent, int *bi)
     *bi = 0;
 }
 
+/* Conducts both RR and RL rotations.
+    INPUT:
+        0: t_pointer - The parent node the new value should be a child of.
+        1: int - The balance index of the whole tree. Passed from main().
+    OUTPUT void */
 void rotate_right(t_pointer *parent, int *bi)
 {
     t_pointer child, grandchild;
