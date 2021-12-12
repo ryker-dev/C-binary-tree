@@ -10,7 +10,14 @@ This file also contains of bits of code previously used in my other programs.
 Code is in English for clarity and comaptibility.
 
 USAGE
-Files can be parsed on program startup by providing them as an argument:
+Compile the program using the c99 standard:
+    gcc .\binarytree.c -o .\binarytree.exe -std=c99
+
+Run the program
+    Powershell/Bash:        .\binarytree.exe
+    CMD:                    binarytree.exe
+
+Files can be parsed either during program operation or on startup by providing them as an argument:
     .\binarytree.exe "values.txt"
 */
 
@@ -31,12 +38,6 @@ typedef struct node_struct
     struct node_struct *left, *right;
 } node, *t_pointer;
 
-/* typedef struct linked_values
-{
-    int value;
-    struct linked_values *prev, *next;
-}
- */
 void add_node(t_pointer *, int, int *);
 void rotate_right(t_pointer *, int *);
 void print_tree(t_pointer, int);
@@ -82,7 +83,7 @@ int main(int argc, char const *argv[])
             fgets(filename, FILENAME_LENGTH, stdin);
             filename[strlen(filename) - 1] = '\0';
 
-            read_file(argv[1], values);
+            read_file(filename, values);
 
             for (i = 0; values[i] != 0; i++)
             {
@@ -91,7 +92,6 @@ int main(int argc, char const *argv[])
 
             print_tree(tree, 0);
 
-            free(values);
             break;
         case 2:
             printf("Input a value: ");
