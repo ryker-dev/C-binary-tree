@@ -103,7 +103,7 @@ int main(int argc, char const *argv[])
             printf("\n");
             break;
         default:
-            printf("Unknown selectio.\n");
+            printf("Unknown selection.\n");
             break;
         }
         printf("\n");
