@@ -29,8 +29,6 @@ Files can be parsed either during program operation or on startup by providing t
 #define BUFFER_SIZE 8
 #define FILENAME_LENGTH 32
 
-#define DEBUG 0
-
 typedef struct node_struct
 {
     int value;
@@ -136,9 +134,6 @@ int menu_handler()
     printf("0) Exit\n");
     printf("Action: ");
 
-#if DEBUG
-    printf("DEBUG: selection was %d\n", selection);
-#endif
     return input_to_int();
 }
 
@@ -199,7 +194,7 @@ int count_lines(const char filename[])
     return lines;
 }
 
-/* Counts the amount of lines in an input file
+/* Reads a file and parses the values into the given list of integers
     INPUT:
         0: const char * - Filename as a string
         1: int * - An int array to store the values to
