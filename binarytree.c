@@ -15,6 +15,7 @@ This program uses a modified version of the code given in exercise 7 as a framew
 #include <stdio.h>
 
 #define BUFFER_SIZE 8
+#define FILENAME_SIZE 32
 
 typedef struct node_struct
 {
@@ -23,26 +24,28 @@ typedef struct node_struct
     struct node_struct *left, *right;
 } node, *t_pointer;
 
-typedef struct linked_values
+/* typedef struct linked_values
 {
     int value;
     struct linked_values *prev, *next;
 }
-
-void
-add_node(t_pointer *, int, int *);
+ */
+void add_node(t_pointer *, int, int *);
 void rotate_right(t_pointer *, int *);
 void print_tree(t_pointer, int);
 void rotate_left(t_pointer *, int *);
 void read_file(const char *, int *);
+int count_lines(const char *);
 
 int main(int argc, char const *argv[])
 {
     int bi = 0, i; // bi = balance indicator
     t_pointer tree = NULL;
+    /* char filename[FILENAME_SIZE] = argv[1]; */
 
     printf("%d\n", argv[1]);
 
+    int values[count_lines(argv[1])];
     read_file(argv[1], values);
 
     for (i = 0; values[i] != 0; i++)
@@ -57,11 +60,37 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
-void read_file(const char filename[], int *array)
+int count_lines(const char filename[])
 {
     FILE *fp;
+    int lines = 0;
+
+    fp = fopen("values.txt", "r");
+    if (fp == NULL)
+    {
+        perror("FILE: Failed to open file. Exiting with code 1.");
+        exit(1);
+    }
+
+    char c;
+    while (!feof(fp))
+    {
+        c = fgetc(fp);
+        if (c == '\n')
+        {
+            lines++;
+        }
+    }
+
+    return lines;
+}
+
+void read_file(const char filename[], int values[])
+{
+    filename = "values.txt";
+    FILE *fp;
     char line[BUFFER_SIZE];
-    int num;
+    int i = 0;
 
     printf("%d\n", filename);
 
@@ -74,9 +103,32 @@ void read_file(const char filename[], int *array)
 
     while (fgets(line, BUFFER_SIZE, fp) != NULL)
     {
-        printf("%s", line);
+        values[i++] = atoi(line);
     }
+
+    return;
 }
+
+/* linked_values *append(linked_values *pStart, int value)
+{
+    if (pStart == NULL)
+    {
+        return pStart;
+    }
+
+    linked_values *ptr = pStart;
+    while (ptr->next != NULL)
+    {
+        ptr = ptr->next;
+    }
+
+    linked_values *new;
+
+    ptr->next = new;
+
+    return;
+} */
+
 void add_node(t_pointer *parent, int value, int *bi)
 {
     if (!(*parent))
